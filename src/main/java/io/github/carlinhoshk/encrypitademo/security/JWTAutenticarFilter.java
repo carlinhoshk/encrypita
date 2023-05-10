@@ -1,5 +1,7 @@
 package io.github.carlinhoshk.encrypitademo.security;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.carlinhoshk.encrypitademo.data.DetalheUsuarioData;
 import io.github.carlinhoshk.encrypitademo.model.UsuarioModel;
@@ -15,8 +17,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class JWTAutenticarFilter extends UsernamePasswordAuthenticationFilter {
+
+    public static final int TOKEN_EXPIRATION_TIME = 600_000;
+
+    public static final String TOKEN_SENHA = "2f268617-b2cf-46d8-a8df-6c1fce5f985f";
 
     private final AuthenticationManager authenticationManager;
 
@@ -43,5 +50,12 @@ public class JWTAutenticarFilter extends UsernamePasswordAuthenticationFilter {
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
         DetalheUsuarioData usuarioData = (DetalheUsuarioData) authResult.getPrincipal();
 
+        String token = JWT.create().
+                withSubject(usuarioData.getUsername()).
+                withExpiresAt(new Date(System.currentTimeMillis() + TOKEN_EXPIRATION_TIME)).
+                sign(Algorithm.HMAC512(TOKEN_SENHA));
+
+        response.getWriter().write(token);
+        response.getWriter().flush();
     }
 }
